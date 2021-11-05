@@ -1,0 +1,9 @@
+Database Agenda:
+o   Change tracking concurrency control (auditing & versioning)
+
+o   Exceptions - Retry scenarios, Commit rollback handling, Connection drops, Detailed Logging
+
+o   Indexes - Anatomy, Types (Clustered/Non-clustered, Composite, Covering, Partial)
+
+o   Migrations - Generic points, Oracle to PostgreSQL, Query and Index Adjustment
+

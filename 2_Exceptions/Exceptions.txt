@@ -1,0 +1,192 @@
+Topic: Exceptions - Retry scenarios, Commit rollback handling, Connection drops, Detailed Logging
+
+
+// Exceptions in Postgres
+Refer:
+For Restoring database
+https://dba.stackexchange.com/questions/149169/binary-path-in-the-pgadmin-preferences
+https://sqlbackupandftp.com/blog/setting-windows-path-for-postgres-tools
+
+SELECT Into examples
+https://joshuaotwell.com/the-strict-keyword-with-select-into-examples-in-postgresql/
+
+Exception : Conditions messages and Codes
+https://www.postgresql.org/docs/current/errcodes-appendix.html
+
+
+Sample DB download:
+https://www.postgresqltutorial.com/postgresql-sample-database/
+For Loading a sample database:
+https://www.postgresqltutorial.com/load-postgresql-sample-database/
+
+Commands:
+
+Demo one : 
+1) Handling no_data_found exception example
+
+Query 1:
+do
+$$
+declare
+	rec record;
+	v_film_id int = 2000;
+begin
+	-- select a film 
+	select film_id, title 
+	into strict rec
+	from film
+	where film_id = v_film_id;
+end;
+$$
+language plpgsql;
+
+Query 2 (created Function and returned value):
+CREATE OR REPLACE FUNCTION get_record()
+RETURNS VARCHAR
+AS
+$$
+declare
+	rec VARCHAR;
+	v_film_id int = 2000;
+begin
+	-- select a film 
+	select film_id, title 
+	into strict rec
+	from film
+	where film_id = v_film_id;
+	RETURN rec;
+end; 
+$$
+language plpgsql;
+
+SELECT get_record();
+
+Query 3 (Customize exception message) : 
+
+do
+$$
+declare
+	rec record;
+	v_film_id int = 2000;
+begin
+	-- select a film 
+	select film_id, title 
+	into strict rec
+	from film
+	where film_id = v_film_id;
+        -- catch exception
+	exception 
+	   when no_data_found then 
+	      raise exception 'film % not found', v_film_id;
+end;
+$$
+language plpgsql;
+
+
+2) Handling too_many_rows exception example
+
+Query 1: 
+do
+$$
+declare
+	rec record;
+begin
+	-- select film 
+	select film_id, title 
+	into strict rec
+	from film
+	where title LIKE 'A%';
+	
+	exception 
+	   when too_many_rows then
+	      raise exception 'Search query returns too many rows';
+end;
+$$
+language plpgsql;
+
+
+3) Handling multiple exceptions &  Handling exceptions as SQLSTATE codes
+
+Query:
+do
+$$
+declare
+	rec record;
+	v_length int = 90;
+begin
+	-- select a film 
+	select film_id, title 
+	into strict rec
+	from film
+	where length = v_length;
+	
+        -- catch exception
+	exception 
+	   when sqlstate 'P0002' then 
+	      raise exception 'film with length % not found', v_length;
+	   when sqlstate 'P0003' then 
+	      raise exception 'The with length % is not unique', v_length;
+end;
+$$
+language plpgsql;
+
+
+
+Additional Info:
+What is strict in Postgres?
+If the STRICT option is specified, the query must return exactly one row or a run-time error will be reported, either NO_DATA_FOUND (no rows) or TOO_MANY_ROWS (more than one row).
+--------------------------------------------------------------------------------------------------
+// Exceptions - Retry scenariostry 
+
+// Retry Patterns for Enterprise Architects
+https://www.enterprisedb.com/blog/application-high-availability-and-resiliency-steps-improve-transaction-retry
+
+// Extra Reading Material:
+https://franckpachot.medium.com/postgresql-subtransactions-savepoints-and-exception-blocks-67e0fbd412af
+
+
+//Demo : Postgres
+
+--  Retry Senario Example or take some other action when exception caught
+
+Queries: 
+create table DEMO1(n integer);
+create table DEMO2(n integer);
+insert into DEMO1 values(42);
+alter table DEMO1 add unique(n); 
+ select * from DEMO1;
+ select * from DEMO2;
+
+
+do
+$$
+begin
+ insert into DEMO1 (n)  values (1);
+ insert into DEMO1 (n)  values (42);
+exception 
+	when others then 
+ 	insert into DEMO2 select * from DEMO1;
+end;
+$$
+
+select * from DEMO2;
+
+------------------------------------------------------------------------------------------
+Demo: Java JDBC Retries Code
+
+
+-------------------------------------------------------------------------------------
+Topic: Exceptions: Commit rollback handling
+https://stackoverflow.com/questions/63489949/how-to-roll-back-a-transaction-on-error-in-postgresql
+
+Key Take away:
+In postgres, we just begin an atomic transaction through begin and end statements and when an exception is caught the entire transaction is automatically rollbacked
+
+For Rollback at application side, refer my hibernate Vedios
+
+--------------------------------------------------------------------------------
+
+Topic :  Exceptions:  Detailed Logging
+
+in pg Admin 4:
+Check Query History
