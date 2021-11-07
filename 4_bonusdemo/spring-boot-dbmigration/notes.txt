@@ -1,0 +1,31 @@
+Assume you wish to move your database to a different environment.
+
+For instance, suppose you have a database in the SIT environment that you want to transfer to the data to SIT2 environment.
+The legacy way to do that is :
+Creating scripts for each database change, storing them in a file, then firing them in the environment you wish to migrate to is the traditional way to do it.
+
+This is time consuming and prone to errors.
+
+Even if the change is small, you must manually run the scripts every time a database modification is made.
+
+Also, if a change has been made, make sure you only execute the new scripts and not the old ones (accidentally).
+
+There is a solution, and it is fully automated!
+
+All you have to do now is place your scripts in a folder with version number and 
+the latest version will be automatically executed when your spring boot application starts!
+
+The tool which does this is called flywaydb
+link : https://flywaydb.org/
+
+Use this as an example project to understand how flywaydb works :-)
+
+Configurations required before running this project:
+create a database migrateDB.
+update the configs in application.properties file as needed
+
+After running this project, schema, table creation and data insertion.
+Also version updation in public schema -> schema_version table
+
+
+
